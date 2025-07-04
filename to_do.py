@@ -1,6 +1,8 @@
 import json
+import os
 
 def main():
+    os.system("cls")
     tasks = load_tasks()
     if not tasks:
         print("No Tasks Yet")
@@ -11,22 +13,39 @@ def main():
             print(task)
         print("")
 
-    n = input("New Task?\n")
-    tasks.append(Task(n))
-    save_tasks(tasks)
+    mode = input("Would you like to \"add\" or \"del\" a task?\n").strip().lower()
+    
+    if mode == "add":
+        n = input("New Task?\n")
+        if n:
+            tasks.append(Task(n))
+            save_tasks(tasks)
+            tasks = load_tasks()
+        os.system("cls")
+    elif mode == "del":
+        if not tasks:
+            print("No tasks to delete\n")
+            return
+        n = input("Task to delete?\n")
+        delete_task(n)
+        tasks = load_tasks()
+    else:
+        print("Nothing added or deleted\n")
 
     if tasks:
         print("Current Tasks:")
         for task in tasks:
             print(task)
+        print("")
     else:
         print("No Tasks")
+        print("")
 
 
 # define classes
 class Task:
     def __init__ (self, description, is_complete = False):
-        self.description = description
+        self.description = description.capitalize()
         self.is_complete = is_complete
 
     def __str__(self):
@@ -51,7 +70,10 @@ class Task:
 def load_tasks(filename = "tasks.json"):
     try:
         with open(filename, "r") as file:
-            saved_tasks = json.load(file)
+            tasklist = file.read().strip()
+            if not tasklist:
+                return []
+            saved_tasks = json.loads(tasklist)
             return [Task.from_dict(x) for x in saved_tasks]
     except FileNotFoundError:
         return []
@@ -60,6 +82,26 @@ def load_tasks(filename = "tasks.json"):
 def save_tasks(tasks, filename = "tasks.json"):
     with open(filename, "w") as file:
         json.dump([task.to_dict() for task in tasks], file, indent = 2)
+
+
+def delete_task(task, filename = "tasks.json"):
+    try:
+        with open(filename, "r") as file:
+            saved_tasks = json.load(file)
+    except FileNotFoundError:
+        print("Tasks file not found")
+        print("")
+        return 
+    saved_tasks = [Task.from_dict(d) for d in saved_tasks]
+    filtered_tasks = [t for t in saved_tasks if t.description.lower() != task.lower()]
+    if len(filtered_tasks) == len(saved_tasks):
+        print("Task not found")
+        print("")
+        return
+    else:
+        save_tasks(filtered_tasks, filename)
+        print(f"{task} deleted!")
+        print("")
 
 
 
