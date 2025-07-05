@@ -1,1 +1,2 @@
+abstract more logic out of main and into 'add', 'delete', and 'complete' functions
 add functionality for looping and adding, completing or deleting multiple tasks at a time
