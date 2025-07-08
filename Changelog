@@ -1,6 +1,6 @@
 Swapped the positions of status and descriptions in task list
 Fixed some capitalizations and punctuations in text
-Added logic for completing tasks
+Added function for completing tasks
 Added functionality for partial inputs when deleting or completing tasks
 changed delete task to only delete the first matching task
-prevent user from adding duplicate tasks
+prevented user from adding duplicate tasks
