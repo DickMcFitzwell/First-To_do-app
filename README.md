@@ -4,7 +4,8 @@ testbed for learning how to code, how to use github, and how to design a user fr
 find this thing, please reach out to me with suggestions on how I can improve it. I'm always looking to learn.
 
 Current Features:
--Task Management
+
+-Task Management:
 ---Add
 ---Delete
 ---Complete
