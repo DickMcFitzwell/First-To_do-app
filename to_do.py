@@ -3,17 +3,21 @@ import os
 
 def main():
     os.system("cls")
-    tasks = app_start()
+    filename = choose_list()
+    tasks = app_start(filename)
     editing = True
     while editing == True:
-        mode = input("Would you like to \"add\", \"complete\", \"delete\" a task or \"exit\"?\n").strip().lower()
+        mode = input("Would you like to \"add\", \"complete\", \"delete\" a task or \"change\" list or \"exit\"?\n").strip().lower()
         
         if mode == "add":
-            add_task(tasks)
+            tasks = add_task(tasks, filename)
         elif mode == "complete":
-            tasks = complete_task(tasks)
+            tasks = complete_task(tasks, filename)
+        elif mode == "change":
+            filename = choose_list()
+            tasks = load_tasks(filename)
         elif mode == "delete":
-            tasks = delete_task(tasks)
+            tasks = delete_task(tasks, filename)
         elif mode == "exit":
             editing = False
         else:
@@ -24,8 +28,7 @@ def main():
                 print(task)
             print("")
         else:
-            print("No Tasks")
-            print("")
+            print("No Tasks\n")
 
 
 
@@ -47,6 +50,7 @@ class Task:
             "description" : self.description,
             "is_complete" : self.is_complete
         }
+    
     @staticmethod
     def from_dict(dict):
         return Task(dict["description"], dict["is_complete"])
@@ -54,26 +58,25 @@ class Task:
 
 # define functions
 
-def add_task(tasks):
+def add_task(tasks, filename):
     n = input("New Task?\n")
-    if n:
-        if any(t.description.lower() == n.strip().lower() for t in tasks):
-            print(f"{n} already exists\n")
-            print("")
-            return
-        else:
-            tasks.append(Task(n))
-            save_tasks(tasks)
-            tasks = load_tasks()
-    os.system("cls")
+    if not n:
+        return tasks
+    if any(t.description.lower() == n.strip().lower() for t in tasks):
+        print(f"{n.strip().capitalize()} already exists\n")
+        return tasks
+    else:
+        tasks.append(Task(n))
+        save_tasks(tasks, filename)
+        os.system("cls")
+    return tasks
 
 
-def app_start():
+def app_start(filename):
     os.system("cls")
-    tasks = load_tasks()
+    tasks = load_tasks(filename)
     if not tasks:
-        print("No Tasks Yet")
-        print("")
+        print("No Tasks Yet\n")
     else:
         print("Current Tasks:")
         for task in tasks:
@@ -82,81 +85,95 @@ def app_start():
     return tasks  
 
 
-def complete_task(tasks, filename = "tasks.json"):
+def choose_list():
+    lists = [f[:-5] for f in os.listdir() if f.lower().endswith(".json")]
+    print("Current lists:")
+    print(lists or "No active lists\n")
+    choice = input("Would you like to \"open\", \"create\", or \"delete\" a list?\n").strip().lower()
+    if choice == "create":
+        name = input("Name your new list:\n").strip().lower()
+        if name in lists:
+            print(f"{name} already exists!")
+        else:
+            with open(f"{name}.json", "w") as filename:
+                json.dump([], filename)
+        return choose_list()
+    elif choice == "open":
+        if not lists:
+            print("No list to open\n")
+            return choose_list()
+        name = input("Which list would you like to open?\n").strip().lower()
+        if not name in lists:
+            print(f"{name} not found!\n")
+            return choose_list()
+        else:
+            return f"{name}.json"
+    elif choice == "delete":
+        if not lists:
+            print("No list to delete\n")
+            return choose_list()
+        name = input("Which list would you like to delete?\n").strip().lower()
+        if os.path.exists(f"{name}.json"):
+            os.remove(f"{name}.json")
+            print(f"{name} has been deleted!\n")
+        else:
+            print(f"{name} not found!\n")
+        return choose_list()
+    else:
+        print("Invalid option\n")
+        return choose_list()
+
+
+def complete_task(tasks, filename):
     if not tasks:
         print("No tasks to complete\n")
-        return
+        return tasks
     task = input("Task to mark complete?\n")
-    try:
-        with open(filename, "r") as file:
-            saved_tasks = json.load(file)
-    except FileNotFoundError:
-        print("File not found\n")
-        print("")
-        return
-    saved_tasks = [Task.from_dict(d) for d in saved_tasks]
     found = False
-    for t in saved_tasks:
+    for t in tasks:
         if t.description.lower().startswith(task.lower()):
-            if t.is_complete == True:
+            if t.is_complete:
                 print(f"{t.description} is already completed\n")
-                print("")
-                return
-            t.mark_complete()
+            else:
+                t.mark_complete()
+                save_tasks(tasks, filename)
+                print(f"{t.description} marked complete\n")
             found = True
             break
-    if found:
-        with open(filename, "w") as file:
-            json.dump([t.to_dict() for t in saved_tasks], file, indent=2)
-            print(f"{t.description} marked complete")
-            print("")
-    else:
+    if not found:
         print("Task not found\n")
-        print("")
-    tasks = load_tasks()
     return tasks
 
 
-def delete_task(tasks, filename = "tasks.json"):
+def delete_task(tasks, filename):
     if not tasks:
         print("No tasks to delete\n")
-        return
+        return tasks
     task = input("Task to delete?\n")
-    try:
-        with open(filename, "r") as file:
-            saved_tasks = json.load(file)
-    except FileNotFoundError:
-        print("Tasks file not found")
-        print("")
-        return 
-    saved_tasks = [Task.from_dict(d) for d in saved_tasks]
-    target_task = next((t for t in saved_tasks if t.description.lower().startswith(task.lower())), None)
+    target_task = next((t for t in tasks if t.description.lower().startswith(task.lower())), None)
     if target_task is None:
-        print("Task not found")
-        print("")
-        return
+        print("Task not found\n")
+        return tasks
     else:
-        saved_tasks.remove(target_task)
-        save_tasks(saved_tasks, filename)
-        print(f"{target_task.description} deleted!")
-        print("")
-    tasks = load_tasks()
+        tasks.remove(target_task)
+        save_tasks(tasks, filename)
+        print(f"{target_task.description} deleted!\n")
     return tasks
 
 
-def load_tasks(filename = "tasks.json"):
+def load_tasks(filename):
     try:
         with open(filename, "r") as file:
-            tasklist = file.read().strip()
-            if not tasklist:
+            tasks = file.read().strip()
+            if not tasks:
                 return []
-            saved_tasks = json.loads(tasklist)
-            return [Task.from_dict(x) for x in saved_tasks]
+            tasks = json.loads(tasks)
+            return [Task.from_dict(x) for x in tasks]
     except FileNotFoundError:
         return []
 
 
-def save_tasks(tasks, filename = "tasks.json"):
+def save_tasks(tasks, filename):
     with open(filename, "w") as file:
         json.dump([task.to_dict() for task in tasks], file, indent = 2)
 

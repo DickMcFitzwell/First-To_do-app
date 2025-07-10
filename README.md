@@ -11,7 +11,12 @@ Current Features:
 ---Save
 ---Load
 
+-List Management:
+---Add
+---Delete
+---Open
+
 Usage:
-Currently only usable in the terminal. 
+Usable in the terminal or as a standalone app (standalone not uploaded to github)
 Use with "python to_do.py" 
 Valid inputs are in double quotes.

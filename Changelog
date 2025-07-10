@@ -1,3 +1,12 @@
+V-0.5
+refactored complete_task to edit tasks list directly instead of creating second list and trying to keep them in sync
+refactored functions to remove saved_tasks variable and reduce redundancy
+cleaned up printed outputs using \n for skipped lines instead of printing empty strings
+changed gitignore to ignore all .json files
+added support for multiple lists
+general bugfixes to catch edge cases and invalid user input
+used pyinstaller to export into single executable file to run on windows
+
 V-0.4
 abstracted start up logic into app_start()
 cleaned up main by consolidating the rest of the functions
